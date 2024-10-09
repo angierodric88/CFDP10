@@ -1,0 +1,120 @@
+import java.io.*;
+import java.util.Random;
+import java.util.Locale;
+
+/**
+ * Clase GenerateInfoFiles para generar archivos de información de vendedores, productos y ventas.
+ */
+public class GenerateInfoFiles {
+
+    private static final String DELIMITER = ";";
+    private static final String VENDORS_FILE = "vendedores.txt";
+    private static final String PRODUCTS_FILE = "productos.txt";
+
+    /**
+     * Genera el archivo de información de vendedores.
+     * 
+     * @param salesmanCount Número de vendedores a generar.
+     */
+    public void createSalesmanInfoFile(int salesmanCount, String directory) {
+        if (salesmanCount <= 0) {
+            System.err.println("El número de vendedores debe ser mayor a 0.");
+            return;
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(directory + "/" + VENDORS_FILE))) {
+            for (int i = 1; i <= salesmanCount; i++) {
+                writer.write("CC" + DELIMITER + i + DELIMITER + "Nombre_" + i + DELIMITER + "Apellido_" + i);
+                writer.newLine();
+            }
+            System.out.println("Archivo de información de vendedores generado en " + directory);
+        } catch (IOException e) {
+            System.err.println("Error al generar archivo de vendedores: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Genera el archivo de productos con un número dado de productos.
+     * 
+     * @param productsCount Número de productos a generar.
+     */
+    public void createProductsFile(int productsCount, String directory) {
+        if (productsCount <= 0) {
+            System.err.println("El número de productos debe ser mayor a 0.");
+            return;
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(directory + "/" + PRODUCTS_FILE))) {
+            Random random = new Random();
+            for (int i = 1; i <= productsCount; i++) {
+                double price = Math.round(random.nextDouble() * 100 * 100.0) / 100.0;
+                writer.write(i + DELIMITER + "Producto_" + i + DELIMITER + String.format(Locale.US, "%.2f", price));
+                writer.newLine();
+            }
+            System.out.println("Archivo de productos generado en " + directory);
+        } catch (IOException e) {
+            System.err.println("Error al generar archivo de productos: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Genera el archivo de ventas para un vendedor específico.
+     * 
+     * @param randomSalesCount Número de ventas aleatorias a generar.
+     * @param name             Nombre del vendedor.
+     * @param id               Identificación del vendedor.
+     */
+    public void createSalesFile(int randomSalesCount, String name, long id, String directory) {
+        if (randomSalesCount <= 0) {
+            System.err.println("El número de ventas debe ser mayor a 0.");
+            return;
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(directory + "/" + name + "_ventas.txt"))) {
+            Random random = new Random();
+            writer.write("CC" + DELIMITER + id);
+            writer.newLine();
+            for (int i = 0; i < randomSalesCount; i++) {
+                int productId = random.nextInt(100) + 1;  // ID de producto entre 1 y 100
+                int quantity = random.nextInt(10) + 1;    // Cantidad entre 1 y 10
+                writer.write(productId + DELIMITER + quantity);
+                writer.newLine();
+            }
+            System.out.println("Archivo de ventas de " + name + " generado en " + directory);
+        } catch (IOException e) {
+            System.err.println("Error al generar archivo de ventas para " + name + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Lee el archivo de vendedores y genera un archivo de ventas para cada uno.
+     * 
+     * @param randomSalesCount Número de ventas aleatorias a generar.
+     */
+    public void generateSalesForAllSalesmen(int randomSalesCount, String directory) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(directory + "/" + VENDORS_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(DELIMITER);
+                long id = Long.parseLong(fields[1]);
+                String name = fields[2];
+                
+                createSalesFile(randomSalesCount, name, id, directory);  // Genera archivo de ventas
+            }
+            System.out.println("Archivos de ventas generados para todos los vendedores en " + directory);
+        } catch (IOException e) {
+            System.err.println("Error al leer archivo de vendedores: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Método principal para ejecutar el programa.
+     */
+    public static void main(String[] args) {
+        GenerateInfoFiles generator = new GenerateInfoFiles();
+        
+        String directory = "./data";  // Cambiar a la ruta que prefieras
+        new File(directory).mkdirs(); // Crea el directorio si no existe
+
+        generator.createSalesmanInfoFile(10, directory);        // Genera archivo con 10 vendedores
+        generator.createProductsFile(50, directory);            // Genera archivo con 50 productos
+        generator.generateSalesForAllSalesmen(5, directory);    // Genera 5 ventas aleatorias para cada vendedor
+    }
+}
